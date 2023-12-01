@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+"-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="printMapper">
+
+	<resultMap type="PrintOrder" id="resultPrintOrder">
+		<result property="orderId" column="ORDER_ID"/>
+		<result property="bookId" column="BOOK_ID"/>
+		<result property="clientId" column="CLIENT_ID"/>
+		<result property="empId" column="EMP_ID"/>
+		<result property="empName" column="EMP_NAME"/>
+		<result property="classify" column="CLASSIFY"/>
+		<result property="unit" column="UNIT"/>
+		<result property="quantity" column="QUANTITY"/>
+		<result property="price" column="PRICE"/>
+		<result property="amount" column="AMOUNT"/>
+		<result property="state" column="STATE"/>
+		<result property="orderDate" column="ORDER_DATE"/>
+		<result property="endDate" column="END_DATE"/>
+		<result property="pubDate" column="PUB_DATE"/>
+	</resultMap>
+	
+	<resultMap type="PrintCalc" id="resultPrintCalc">
+		<result property="orderId" column="ORDER_ID"/>
+		<result property="bookId" column="BOOK_ID"/>
+		<result property="clientId" column="CLIENT_ID"/>
+		<result property="empId" column="EMP_ID"/>
+		<result property="empName" column="EMP_NAME"/>
+		<result property="classify" column="CLASSIFY"/>
+		<result property="unit" column="UNIT"/>
+		<result property="quantity" column="QUANTITY"/>
+		<result property="price" column="PRICE"/>
+		<result property="amount" column="AMOUNT"/>
+		<result property="state" column="STATE"/>
+		<result property="orderDate" column="ORDER_DATE"/>
+		<result property="endDate" column="END_DATE"/>
+		<result property="pubDate" column="PUB_DATE"/>
+	</resultMap>
+
+	<resultMap type="PrintOffice" id="resultPrintOffice">
+		<result property="clientId" column="CLIENT_ID"/>
+		<result property="category" column="CATEGORY"/>
+		<result property="clientName" column="CLIENT_NAME"/>
+		<result property="clientAddress" column="CLIENT_ADDRESS"/>
+		<result property="clientContact" column="CLIENT_CONTACT"/>
+		<result property="eid" column="EID"/>
+		<result property="clientUrl" column="CLIENT_URL"/>
+		<result property="manager" column="MANAGER"/>
+		<result property="managerContact" column="MANAGER_CONTACT"/>
+		<result property="managerEmail" column="MANAGER_EMAIL"/>
+		<result property="startDate" column="START_DATE"/>
+		<result property="endDate" column="END_DATE"/>
+	</resultMap>
+	
+	<resultMap type="Book" id="resultBook">
+		<result property="bookId" column="BOOK_ID" />
+		<result property="writerId" column="WRITER_ID" />
+		<result property="bookName" column="BOOK_NAME" />
+		<result property="writerName" column="WRITER_NAME" />
+		<result property="bookPriceS" column="BOOK_PRICE_S" />
+		<result property="bookPriceR" column="BOOK_PRICE_R" />
+		<result property="bookPrice" column="BOOK_PRICE" />
+		<result property="category" column="CATEGORY" />
+		<result property="isbn" column="ISBN" />
+		<result property="bookState" column="BOOK_STATE" />
+		<result property="engraving" column="ENGRAVING" />
+		<result property="pubDate" column="PUB_DATE" />
+		<result property="regDate" column="REG_DATE" />
+	</resultMap>
+	
+	
+	<select id="selectPrintOrderList" parameterType="Paging" resultMap="resultPrintOrder">
+      <![CDATA[
+      select * 
+      from (select rownum rnum, sub.*
+            from (select * from print_order 
+                order by order_id desc, ORDER_DATE desc) sub) 
+      where rnum >= #{ startRow } and rnum <= #{ endRow }
+      ]]>
+   </select>
+   
+   <select id="selectPrintCalcList" parameterType="Paging" resultMap="resultPrintCalc">
+      <![CDATA[
+      select * 
+      from (select rownum rnum, sub.*
+            from (select * from print_order 
+                order by order_id desc, ORDER_DATE desc) sub) 
+      where rnum >= #{ startRow } and rnum <= #{ endRow }
+      ]]>
+   </select>
+   
+   <select id="selectPrintOrderByDate" parameterType="Search" resultMap="resultPrintOrder">
+      <![CDATA[
+      select * 
+      from (select rownum rnum, sub.*
+            from (select * from print_order
+		where order_date between #{ begin } and #{ end } + 1 - 1/86400
+		order by order_id desc, order_date desc) sub) 
+      where rnum >= #{ startRow } and rnum <= #{ endRow }
+      ]]>
+   </select>
+	
+	<select id="selectPrintCalcByDate" parameterType="Search" resultMap="resultPrintCalc">
+      <![CDATA[
+      select * 
+      from (select rownum rnum, sub.*
+            from (select * from print_order
+		where order_date between #{ begin } and #{ end } + 1 - 1/86400
+		order by order_id desc, order_date desc) sub) 
+      where rnum >= #{ startRow } and rnum <= #{ endRow }
+      ]]>
+   </select>
+	<!-- <select id="selectClientList" parameterType="Paging" resultMap="resultPrintOffice">
+      <![CDATA[
+      select * 
+      from (select rownum rnum, sub.*
+            from (select * from print_order 
+                 CLIENT_ID desc) sub) 
+      where rnum >= #{ startRow } and rnum <= #{ endRow }
+      ]]>
+   </select> -->
+	
+	<select id="selectPrintOrderListCount" resultType="_int" >
+		select count(*) from print_order
+	</select>
+	
+	<select id="selectPrintCalcListCount" resultType="_int" >
+		select count(*) from print_order
+	</select>
+	
+	<select id ="selectPrintOffice" parameterType="_int" resultMap="resultPrintOffice">
+		select *
+		from client
+		where CLIENT_ID = #{ clientId }
+	</select>
+	
+	<select id="selectBook" parameterType="_int" resultMap="resultBook">
+		select *
+		from Book
+		where book_id = #{ bookId }
+	</select>
+	
+	<insert id="insertPrintOrder" parameterType="PrintOrder">
+		insert into print_order
+		values ((select max(ORDER_ID) + 1 from print_order), #{bookId}, 
+		#{clientId}, #{empId}, #{empName}, #{classify}, #{unit}, #{quantity}, 
+		#{price}, #{amount}, #{state}, sysdate, #{endDate}, #{pubDate})	
+	</insert>
+	
+	<select id="selectMaxPrintOrderId" resultType="_int">
+		select nvl(max(order_id), 0) from print_order
+	</select>
+	
+	<delete id="deletePrintOrder" parameterType="_int">
+		delete from print_order where order_id = #{ orderId }
+	</delete>
+	
+	<update id="updatePrintOrder" parameterType="PrintOrder">
+		update print_order
+		set order_date = #{ orderDate }, end_date = #{ endDate }, pub_date = #{ pubDate },
+   			quantity = #{ quantity }, price = #{ price }, amount = #{ amount }, state = #{ state }
+		where order_id = #{ orderId }
+	</update>
+	
+	<update id="updatePrintCalc" parameterType="PrintCalc">
+		update print_order
+		set end_date = #{ endDate }, quantity = #{ quantity },
+   			price = #{ price }, amount = #{ amount }, state = #{ state }
+		where order_id = #{ orderId }
+	</update>
+	
+	<select id ="selectPrintOrderCountByOrderId" parameterType="_int" resultType="_int">
+		select count(*) from print_order
+		where order_id = #{ orderId }
+	</select>
+	
+	<select id="selectPrintOrderCountByPrintName" parameterType="Search" resultType="_int">
+		select count(*) from print_order
+		join client using (client_id)
+		where client_name like '%' || ${ keyword } || '%'
+	</select>
+	
+	<select id="selectPrintOrderCountByBookId" parameterType="_int" resultType="_int">
+		select count(*) from print_order
+		join book using (book_id)
+		where book_id = #{ bookId }
+	</select>
+	
+	<select id="selectPrintOrderCountByBookName" parameterType="Search" resultType="_int">
+		select count(*) from print_order
+		join book using (book_id)
+		where book_name like '%' || ${ keyword } || '%'
+	</select>
+	
+	<select id="selectPrintOrderByOrderId" parameterType="Search" resultMap="resultPrintOrder">
+		select *
+		from (select rownum rnum, sub.*
+			  from (select * from print_order
+			  		join client using(client_id)
+			  		join book using(book_id)
+			  		where order_id = to_number( #{ keyword } )
+			  		order by order_id desc, order_date desc ) sub)
+		where rnum between #{ startRow } and #{ endRow }
+	</select>
+	
+	<select id="selectPrintOrderByPrintName" parameterType="Search" resultMap="resultPrintOrder">
+		select *
+		from (select rownum rnum, sub.*
+			  from (select * from print_order
+			  		join client using (client_id) 
+			  		join book using(book_id)
+			  		where client_name like '%' || ${ keyword } || '%'
+			  		order by order_id desc, order_date desc ) sub)
+  		where rnum between #{ startRow } and #{ endRow }
+	</select>
+	
+	<select id="selectPrintOrderByBookId" parameterType="Search" resultMap="resultPrintOrder">
+		select *
+		from (select rownum rnum, sub.*
+			  from (select * from print_order
+			  		join client using (client_id) 
+			  		join book using(book_id)
+			  		where book_id = to_number( #{ keyword } )
+			  		order by order_id desc, order_date desc ) sub)
+  		where rnum between #{ startRow } and #{ endRow }
+	</select>
+	
+	<select id="selectPrintOrderByBookName" parameterType="Search" resultMap="resultPrintOrder">
+		select *
+		from (select rownum rnum, sub.*
+			  from (select * from print_order
+			  		join client using (client_id) 
+			  		join book using(book_id)
+			  		where book_name like '%' || ${ keyword } || '%'
+			  		order by order_id desc, order_date desc ) sub)
+  		where rnum between #{ startRow } and #{ endRow }
+	</select>
+	
+</mapper>
+

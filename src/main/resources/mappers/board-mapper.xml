@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE mapper PUBLIC
+"-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="boardMapper">
+
+	<resultMap type="Board" id="resultBoardJoin">
+		<result property="depId" column="DEP_ID" />
+		<result property="boardId" column="BOARD_ID" />
+		<result property="empId" column="EMP_ID" />
+		<result property="boardTitle" column="BOARD_TITLE" />
+		<result property="boardDetail" column="BOARD_DETAIL" />
+		<result property="createDate" column="CREATE_DATE" />
+		<result property="modifyDate" column="MODIFY_DATE" />
+		<result property="deleteDate" column="DELETE_DATE" />
+		<result property="viewsNum" column="VIEWS_NUM" />
+		<result property="empName" column="EMP_NAME" />
+		<result property="depName" column="DEP_NAME" />
+	</resultMap>
+	
+	<resultMap type="Board" id="resultBoard">
+		<result property="depId" column="DEP_ID" />
+		<result property="boardId" column="BOARD_ID" />
+		<result property="empId" column="EMP_ID" />
+		<result property="boardTitle" column="BOARD_TITLE" />
+		<result property="boardDetail" column="BOARD_DETAIL" />
+		<result property="createDate" column="CREATE_DATE" />
+		<result property="modifyDate" column="MODIFY_DATE" />
+		<result property="deleteDate" column="DELETE_DATE" />
+		<result property="viewsNum" column="VIEWS_NUM" />
+	</resultMap>
+	
+	<resultMap type="BoardUpload" id="resultBoardUpload">
+		<result property="uploadId" column="UPLOAD_ID" />
+		<result property="depId" column="DEP_ID" />
+		<result property="boardId" column="BOARD_ID" />
+		<result property="uploadUrl" column="UPLOAD_URL" />
+		<result property="renameUrl" column="RENAME_URL" />
+	</resultMap>
+	
+	<select id="selectBoardListCount" resultType="_int">
+		select count(*) from board
+	</select>
+	
+	<select id="selectBoardList" parameterType="Paging" resultMap="resultBoardJoin">
+		<![CDATA[
+		select * 
+		from (select rownum rnum, DEP_ID, BOARD_ID, EMP_ID, 
+		           BOARD_TITLE, BOARD_DETAIL, CREATE_DATE, 
+		           MODIFY_DATE, DELETE_DATE, VIEWS_NUM
+		      from (select * 
+		            from board
+		            order by BOARD_ID desc))
+		left join department using(DEP_ID)
+		left join employee using(EMP_ID)
+		where rnum >= #{ startRow } and rnum <= #{ endRow }
+		order by BOARD_ID desc
+		]]>
+	</select>
+	
+	<!-- 마이 -->
+	<select id="selectBoardListMy" parameterType="Search" resultMap="resultBoardJoin">
+		<![CDATA[
+		select * 
+		from (select rownum rnum, DEP_ID, BOARD_ID, EMP_ID, 
+		           BOARD_TITLE, BOARD_DETAIL, CREATE_DATE, 
+		           MODIFY_DATE, DELETE_DATE, VIEWS_NUM
+		      from (select * 
+		            from board
+		            order by BOARD_ID desc))
+		left join department using(DEP_ID)
+		left join employee using(EMP_ID)
+		where EMP_ID = #{ empId } and 
+		(rnum >= #{ startRow } and rnum <= #{ endRow })
+		order by BOARD_ID desc
+		]]>
+	</select>
+	
+	<select id="selectBoardListCountMy" parameterType="BoardKeyword" resultType="_int">
+		SELECT count(*) from board
+		WHERE emp_id = #{ empId } and dep_id = #{ depId }
+	</select>
+	
+	<!-- 날짜 -->
+	<select id="selectBoardListDateCount" parameterType="Search" resultType="_int" >
+		SELECT count(*) from board
+		where create_date between #{ begin } and (to_date(#{ end }) + 1 - 1/86400)
+	</select>
+	
+	<select id="selectBoardListDate" parameterType="Search" resultMap="resultBoardJoin">
+		<![CDATA[
+		select * 
+		from (select rownum rnum, DEP_ID, BOARD_ID, EMP_ID, 
+		           BOARD_TITLE, BOARD_DETAIL, CREATE_DATE, 
+		           MODIFY_DATE, DELETE_DATE, VIEWS_NUM
+		      from (select * 
+		            from board
+		            where create_date between #{ begin } and (to_date(#{ end }) + 1 - 1/86400)
+		            order by BOARD_ID desc))
+		left join department using(DEP_ID)
+		left join employee using(EMP_ID)
+		where rnum >= #{ startRow } and rnum <= #{ endRow }
+		order by BOARD_ID desc
+		]]>
+	</select>
+	
+	
+	<!-- 서치 -->
+	<select id="selectBoardSearchCountTitle" parameterType="Search" resultType="_int" >
+		SELECT count(*) from board
+		where BOARD_TITLE like '%' || #{ keyword } || '%'
+	</select>
+	
+	<select id="selectBoardSearchCountContent" parameterType="Search" resultType="_int" >
+		SELECT count(*) from board
+		where BOARD_DETAIL like '%' || #{ keyword } || '%'
+	</select>
+	
+	<select id="selectBoardSearchCountWriter" parameterType="Search" resultType="_int" >
+		SELECT count(*) from board
+		join employee using (EMP_ID)
+		where emp_name like '%' || #{ keyword } || '%'
+	</select>
+	
+	<select id="selectBoardSearchTitle" parameterType="Search" resultMap="resultBoardJoin">
+		<![CDATA[
+		select * 
+		from (select rownum rnum, DEP_ID, BOARD_ID, EMP_ID, 
+		           BOARD_TITLE, BOARD_DETAIL, CREATE_DATE, 
+		           MODIFY_DATE, DELETE_DATE, VIEWS_NUM
+		      from (select * 
+		            from board
+		            where BOARD_TITLE like '%' || #{ keyword } || '%'
+		            order by BOARD_ID desc))
+		left join department using(DEP_ID)
+		left join employee using(EMP_ID)
+		where rnum >= #{ startRow } and rnum <= #{ endRow }
+		order by BOARD_ID desc
+		]]>
+	</select>
+	
+	<select id="selectBoardSearchContent" parameterType="Search" resultMap="resultBoardJoin">
+		<![CDATA[
+		select * 
+		from (select rownum rnum, DEP_ID, BOARD_ID, EMP_ID, 
+		           BOARD_TITLE, BOARD_DETAIL, CREATE_DATE, 
+		           MODIFY_DATE, DELETE_DATE, VIEWS_NUM
+		      from (select * 
+		            from board
+		            where BOARD_DETAIL like '%' || #{ keyword } || '%'
+		            order by BOARD_ID desc))
+		left join department using(DEP_ID)
+		left join employee using(EMP_ID)
+		where rnum >= #{ startRow } and rnum <= #{ endRow }
+		order by BOARD_ID desc
+		]]>
+	</select>
+	
+	<select id="selectBoardSearchWriter" parameterType="Search" resultMap="resultBoardJoin">
+		<![CDATA[
+		select * 
+		from (select rownum rnum, sub.*
+		      from (select * 
+		            from board
+		            join department using (DEP_ID)
+		            join employee using (EMP_ID)
+		            where emp_name like '%' || #{ keyword } || '%'
+		            order by BOARD_ID desc) sub)
+		where rnum >= #{ startRow } and rnum <= #{ endRow }
+		order by BOARD_ID desc
+		]]>
+	</select>
+	
+	<!-- 하나 -->
+	<select id="selectBoard" parameterType="BoardKeyword" resultMap="resultBoardJoin">
+		select *
+		from (select * 
+		      from board
+		      where emp_id = #{empId} and dep_id = #{depId} and board_id = #{boardId})
+		left join department using(DEP_ID)
+		left join employee using(EMP_ID)
+	</select>
+	
+	<select id="selectBoardListFile" parameterType="BoardKeyword" resultMap="resultBoardUpload">
+		select * from UPLOAD_BOARD
+		where DEP_ID = #{ depId } and BOARD_ID = #{ boardId }
+	</select>
+	
+	<select id="selectDepName" parameterType="_int" resultType="string">
+		select dep_name from department
+		where dep_id = #{ depId }
+	</select>
+	
+	<select id="selectBoardId" resultType="_int">
+		select max(BOARD_ID)+1 from board
+	</select>
+	
+	<select id="selectBoardUpload" parameterType="Board" resultType="_int">
+		select count(*) 
+		from UPLOAD_BOARD
+		where DEP_ID = #{ depId } and BOARD_ID = #{ boardId }
+	</select>
+	
+	<insert id="insertBoard" parameterType="Board">
+		insert into board 
+		values (#{depId}, (select max(BOARD_ID) + 1 from board), 
+		        #{empId}, #{boardTitle}, #{boardDetail}, 
+		        default, null, null, 0)
+	</insert>
+	
+	<insert id="insertUploadBoard" parameterType="BoardUpload">
+		insert into upload_board 
+		values ((select max(UPLOAD_ID) + 1 from upload_board), 
+		        #{depId}, #{boardId}, #{uploadUrl}, #{renameUrl})
+	</insert>
+	
+	<update id="updateBoardViewNum" parameterType="BoardKeyword">
+		update board set
+		VIEWS_NUM = VIEWS_NUM + 1
+		where DEP_ID = #{ depId } and BOARD_ID = #{ boardId }
+	</update>
+	
+	<update id="updateUploadBoard" parameterType="BoardUpload">
+		update upload_board set 
+		UPLOAD_URL = #{ uploadUrl },
+		RENAME_URL = #{ renameUrl }
+		where DEP_ID = #{ depId } 
+		and BOARD_ID = #{ boardId }
+	</update>
+	
+	<update id="updateBoard" parameterType="Board">
+		update board set
+		BOARD_TITLE = #{ boardTitle },
+		BOARD_DETAIL = #{ boardDetail },
+		MODIFY_DATE = sysdate
+		where DEP_ID = #{ depId }
+		and BOARD_ID = #{ boardId }
+	</update>
+	
+	<delete id="deleteBoardUpload" parameterType="Board">
+		delete from upload_board
+		where board_id = #{ boardId }
+	</delete>	
+	
+	<delete id="deleteBoard" parameterType="Board">
+		delete from board 
+		where board_id = #{ boardId }
+	</delete>	
+	
+	
+</mapper>
+
+
+
+
+
+

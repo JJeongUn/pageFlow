@@ -1,0 +1,366 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE mapper PUBLIC
+"-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="salesMapper">
+
+	<resultMap type="BookOrder" id="resultBookOrder">
+		<result property="orderId" column="order_ID" />
+		<result property="bookId" column="BOOK_ID" />
+		<result property="clientId" column="CLIENT_ID" />
+		<result property="empId" column="EMP_ID" />
+		<result property="empName" column="EMP_NAME" />
+		<result property="orderQuantity" column="ORDER_QUANTITY" />
+		<result property="orderDate" column="ORDER_DATE" />
+		<result property="modifyDate" column="MODIFY_DATE" />
+		<result property="state" column="STATE" />
+		<result property="bookName" column="BOOK_NAME" />
+		<result property="bookPrice" column="BOOK_PRICE" />
+		<result property="bookStoreName" column="CLIENT_NAME" />
+	</resultMap>
+	
+	<resultMap type="Sales" id="resultSales">
+		<result property="salesId" column="SALES_ID" />
+		<result property="orderId" column="ORDER_ID" />
+		<result property="bookId" column="BOOK_ID" />
+		<result property="clientId" column="CLIENT_ID" />
+		<result property="empId" column="EMP_ID" />
+		<result property="empName" column="EMP_NAME" />
+		<result property="orderQuantity" column="ORDER_QUANTITY" />
+		<result property="orderDate" column="ORDER_DATE" />
+		<result property="collectedAmount" column="COLLECTED_AMOUNT" />
+		<result property="collectDate" column="COLLECT_DATE" />
+		<result property="createDate" column="CREATE_DATE" />
+		<result property="bookName" column="BOOK_NAME" />
+		<result property="bookPrice" column="BOOK_PRICE" />
+		<result property="bookStoreName" column="CLIENT_NAME" />
+	</resultMap>
+	
+	<resultMap type="BookForSales" id="resultBook">
+		<result property="bookId" column="BOOK_ID" />
+		<result property="writerId" column="WRITER_ID" />
+		<result property="bookName" column="BOOK_NAME" />
+		<result property="writerName" column="WRITER_NAME" />
+		<result property="bookPriceS" column="BOOK_PRICE_S" />
+		<result property="bookPriceR" column="BOOK_PRICE_R" />
+		<result property="bookPrice" column="BOOK_PRICE" />
+		<result property="category" column="CATEGORY" />
+		<result property="isbn" column="ISBN" />
+		<result property="bookState" column="BOOK_STATE" />
+		<result property="engraving" column="ENGRAVING" />
+		<result property="pubDate" column="PUB_DATE" />
+		<result property="regDate" column="REG_DATE" />
+	</resultMap>
+	
+	<resultMap type="BookStore" id="resultBookStore">
+		<result property="clientId" column="CLIENT_ID" />
+		<result property="category" column="CATEGORY" />
+		<result property="clientName" column="CLIENT_NAME" />
+		<result property="clientAddress" column="CLIENT_ADDRESS" />
+		<result property="clientContact" column="CLIENT_CONTACT" />
+		<result property="eid" column="EID" />
+		<result property="clientUrl" column="CLIENT_URL" />
+		<result property="manager" column="MANAGER" />
+		<result property="managerContact" column="MANAGER_CONTACT" />
+		<result property="managerEmail" column="MANAGER_EMAIL" />
+		<result property="startDate" column="START_DATE" />
+		<result property="endDate" column="END_DATE" />
+	</resultMap>
+	
+	<resultMap type="Client" id="resultClient">
+		<result property="clientId" column="CLIENT_ID" />
+		<result property="category" column="CATEGORY" />
+		<result property="clientName" column="CLIENT_NAME" />
+		<result property="clientAddress" column="CLIENT_ADDRESS" />
+		<result property="clientContact" column="CLIENT_CONTACT" />
+		<result property="eid" column="EID" />
+		<result property="clientUrl" column="CLIENT_URL" />
+		<result property="manager" column="MANAGER" />
+		<result property="managerContact" column="MANAGER_CONTACT" />
+		<result property="managerEmail" column="MANAGER_EMAIL" />
+		<result property="startDate" column="START_DATE" />
+		<result property="endDate" column="END_DATE" />
+	</resultMap>
+	
+	<resultMap type="SalesStatistics" id="resultSalesStatistics">
+		<result property="bookId" column="BOOK_ID" />
+		<result property="bookName" column="BOOK_NAME" />
+		<result property="salesMonth01" column="M01" />
+		<result property="salesMonth02" column="M02" />
+		<result property="salesMonth03" column="M03" />
+		<result property="salesMonth04" column="M04" />
+		<result property="salesMonth05" column="M05" />
+		<result property="salesMonth06" column="M06" />
+		<result property="salesMonth07" column="M07" />
+		<result property="salesMonth08" column="M08" />
+		<result property="salesMonth09" column="M09" />
+		<result property="salesMonth10" column="M10" />
+		<result property="salesMonth11" column="M11" />
+		<result property="salesMonth12" column="M12" />
+	</resultMap>
+	
+	<resultMap type="Rank" id="resultRank">
+		<result property="rank" column="RANK" />
+		<result property="bookName" column="BOOK_NAME" />
+		<result property="writer" column="WRITER" />
+		<result property="isbn" column="ISBN" />
+		<result property="category" column="CATEGORY" />
+		<result property="bookType" column="BOOK_TYPE" />
+	</resultMap>
+	
+	<select id="selectBookOrderCountByDate" parameterType="Search" resultType="_int">
+		select count(*) from book_order
+		where order_date between #{ begin } and (to_date(#{ end }) + 1 - 1/86400)
+	</select>
+	
+	<select id="selectBookOrderByDate" parameterType="Search" resultMap="resultBookOrder">
+		select *
+		from (select rownum rnum, sub.*
+			  from (select * from book_order
+			  		join book using (book_id)
+			  		join client using (client_id)
+					where order_date between #{ begin } and (to_date(#{ end }) + 1 - 1/86400)
+					order by order_date desc, order_id desc, book_id desc) sub)
+		where rnum between #{ startRow } and #{ endRow }
+	</select>
+	
+	<select id="selectSalesCountByDate" parameterType="Search" resultType="_int">
+		select count(*) from sales
+		left join book_order using (order_id, book_id)
+		where order_date between #{ begin } and (to_date(#{ end }) + 1 - 1/86400)
+	</select>
+	
+	<select id="selectSalesListByDate" parameterType="Search" resultMap="resultSales">
+		select *
+		from (select rownum rnum, sub.*
+			  from (select * from sales
+					join book using (book_id)
+					join book_order using (order_id, book_id)
+					join client using (client_id)
+					where order_date between #{ begin } and (to_date(#{ end }) + 1 - 1/86400)
+					order by order_date desc, order_id desc, book_id desc) sub)
+		where rnum between #{ startRow } and #{ endRow }
+	</select>
+	
+	<update id="updateSales" parameterType="Sales">
+		update sales
+		set collected_amount = #{ collectedAmount },
+			collect_date = sysdate
+		where sales_id = #{ salesId }
+	</update>
+	
+	<select id="selectBook" parameterType="_int" resultMap="resultBook">
+		select * from book
+		where book_id = #{ bookId }
+	</select>
+	
+	<select id="selectBookStore" parameterType="_int" resultMap="resultBookStore">
+		select * from client
+		where client_id = #{ clientId }
+	</select>
+	
+	<select id="selectClientListCount" resultType="_int">
+		select count(*) from client
+	</select>
+	
+	<select id="selectClientCountByStartDate" parameterType="Search" resultType="_int">
+		select count(*) from client
+		where start_date between #{ begin } and #{ end }
+	</select>
+	
+	<select id="selectClientCountByEndDate" parameterType="Search" resultType="_int">
+		select count(*) from client
+		where end_date between #{ begin } and #{ end }
+	</select>
+	
+	<select id="selectClientList" parameterType="Paging" resultMap="resultClient">
+		select *
+		from (select rownum rnum, sub.*
+			  from (select * from client
+					order by start_date desc, client_id desc) sub) 
+		where rnum between #{ startRow } and #{ endRow } 
+	</select>
+	
+	<select id="selectClientByStartDate" parameterType="Search" resultMap="resultClient">
+		select *
+		from (select rownum rnum, sub.*
+			  from (select * from client
+					where start_date between #{ begin } and #{ end }
+					order by start_date desc, client_id desc) sub) 
+		where rnum between #{ startRow } and #{ endRow } 
+	</select>
+	
+	<select id="selectClientByEndDate" parameterType="Search" resultMap="resultClient">
+		select *
+		from (select rownum rnum, sub.*
+			  from (select * from client
+					where end_date between #{ begin } and #{ end }
+					order by end_date desc, client_id desc) sub) 
+		where rnum between #{ startRow } and #{ endRow } 
+	</select>
+	
+	<insert id="insertBookOrder" parameterType="BookOrder">
+		insert into book_order
+		values (#{ orderId }, #{ bookId }, #{ clientId }, #{ empId }, #{ orderQuantity }, sysdate, default, #{ state })
+	</insert>
+	
+	<update id="updateBookOrder" parameterType="BookOrder">
+		update book_order
+		set order_quantity = #{ orderQuantity },
+			state = #{ state },
+			modify_date = sysdate
+		where order_id = #{ orderId } and book_id = #{ bookId }
+	</update>
+	
+	<delete id="deleteBookOrder" parameterType="BookOrder">
+		delete from book_order
+		where order_id = #{ orderId } and book_id = #{ bookId }
+	</delete>
+	
+	<insert id="insertClient" parameterType="Client">
+		insert into client
+		values (
+			<if test="category == '서점'">
+				decode((select count(client_id) from client where client_id like '1____'),
+				0, 10001,
+				(select max(client_id)+1 from client where client_id like '1____')),
+			</if>
+			<if test="category == '인쇄소'">
+				decode((select count(client_id) from client where client_id like '2____'),
+				0, 20001,
+				(select max(client_id)+1 from client where client_id like '2____')),
+			</if>
+			<if test="category == '창고'">
+				decode((select count(client_id) from client where client_id like '3____'),
+				0, 30001,
+				(select max(client_id)+1 from client where client_id like '3____')),
+			</if>
+			#{ category }, #{ clientName }, #{ clientAddress }, #{ clientContact }, #{ eid },
+			#{ clientUrl }, #{ manager }, #{ managerContact }, #{ managerEmail }, #{ startDate }, #{ endDate }
+		)
+	</insert>
+	
+	<update id="updateClient" parameterType="Client">
+		update client
+		set category = #{ category }, client_name = #{ clientName },
+			client_address = #{ clientAddress }, client_contact = #{ clientContact },
+			eid = #{ eid }, client_url = #{ clientUrl }, manager = #{ manager },
+			manager_contact = #{ managerContact }, manager_email = #{ managerEmail },
+			start_date = #{ startDate }, end_date = #{ endDate }
+		where client_id = #{ clientId }
+	</update>
+	
+	<delete id="deleteClient" parameterType="_int">
+		delete from client
+		where client_id = #{ clientId }
+	</delete>
+	
+	<select id="selectBookOrderCountByBook" parameterType="Search" resultType="_int">
+		select count(*) from book_order
+		join book using (book_id)
+		where book_name like '%' || #{ keyword } || '%'
+	</select>
+	
+	<select id="selectBookOrderCountByBookStore" parameterType="Search" resultType="_int">
+		select count(*) from book_order
+		join client using (client_id)
+		where client_name like '%' || #{ keyword } || '%'
+	</select>
+	
+	<select id="selectBookOrderCountByLocation" parameterType="Search" resultType="_int">
+		select count(*) from book_order
+		join client using (client_id)
+		where client_address like '%' || #{ keyword } || '%'
+	</select>
+	
+	<select id="selectBookOrderByBook" parameterType="Search" resultMap="resultBookOrder">
+		select *
+		from (select rownum rnum, sub.*
+			  from (select * from book_order
+			  		join book using (book_id)
+			  		join client using (client_id)
+					where book_name like '%' || #{ keyword } || '%'
+					order by order_date desc, order_id desc, book_id desc) sub)
+		where rnum between #{ startRow } and #{ endRow }
+	</select>
+	
+	<select id="selectBookOrderByBookStore" parameterType="Search" resultMap="resultBookOrder">
+		select *
+		from (select rownum rnum, sub.*
+			  from (select * from book_order
+			  		join book using (book_id)
+			  		join client using (client_id)
+					where client_name like '%' || #{ keyword } || '%'
+					order by order_date desc, order_id desc, book_id desc) sub)
+		where rnum between #{ startRow } and #{ endRow }
+	</select>
+	
+	<select id="selectBookOrderByLocation" parameterType="Search" resultMap="resultBookOrder">
+		select *
+		from (select rownum rnum, sub.*
+			  from (select * from book_order
+			  		join book using (book_id)
+			  		join client using (client_id)
+					where client_address like '%' || #{ keyword } || '%'
+					order by order_date desc, order_id desc, book_id desc) sub)
+		where rnum between #{ startRow } and #{ endRow }
+	</select>
+	
+	<select id="selectMaxOrderId" resultType="_int">
+		select nvl(max(order_id), 0) from book_order
+	</select>
+	
+	<select id="selectSalesForStats" parameterType="_int" resultMap="resultSalesStatistics">
+		SELECT book_id, book_name
+		    , SUM(DECODE(TO_CHAR(collect_date, 'MM'), '01', order_quantity, 0)) AS M01
+		    , SUM(DECODE(TO_CHAR(collect_date, 'MM'), '02', order_quantity, 0)) AS M02
+		    , SUM(DECODE(TO_CHAR(collect_date, 'MM'), '03', order_quantity, 0)) AS M03
+		    , SUM(DECODE(TO_CHAR(collect_date, 'MM'), '04', order_quantity, 0)) AS M04
+		    , SUM(DECODE(TO_CHAR(collect_date, 'MM'), '05', order_quantity, 0)) AS M05
+		    , SUM(DECODE(TO_CHAR(collect_date, 'MM'), '06', order_quantity, 0)) AS M06
+		    , SUM(DECODE(TO_CHAR(collect_date, 'MM'), '07', order_quantity, 0)) AS M07
+		    , SUM(DECODE(TO_CHAR(collect_date, 'MM'), '08', order_quantity, 0)) AS M08
+		    , SUM(DECODE(TO_CHAR(collect_date, 'MM'), '09', order_quantity, 0)) AS M09
+		    , SUM(DECODE(TO_CHAR(collect_date, 'MM'), '10', order_quantity, 0)) AS M10
+		    , SUM(DECODE(TO_CHAR(collect_date, 'MM'), '11', order_quantity, 0)) AS M11
+		    , SUM(DECODE(TO_CHAR(collect_date, 'MM'), '12', order_quantity, 0)) AS M12
+		FROM book
+		LEFT JOIN sales USING (book_id)
+		LEFT JOIN book_order USING (order_id, book_id)
+		WHERE TO_CHAR(collect_date, 'YYYY') = #{ year }
+		GROUP BY book_id, book_name
+		ORDER BY book_id asc
+	</select>
+	
+	<insert id="insertSales" parameterType="Sales">
+		insert into sales values
+		((select nvl(max(sales_id), 0) + 1 from sales), #{ orderId }, #{ bookId }, #{ collectedAmount }, 
+		<choose>
+			<when test="collectedAmount > 0">
+				sysdate
+			</when>
+			<otherwise>
+				null
+			</otherwise>
+		</choose>
+		, sysdate)
+	</insert>
+	
+	<delete id="deleteSales" parameterType="_int">
+		delete from sales
+		where sales_id = #{ salesId }
+	</delete>
+	
+	<select id="selectYears" resultType="_int">
+		select to_char(collect_date, 'YYYY') from sales
+		where collect_date is not null
+		group by to_char(collect_date, 'YYYY')
+		order by to_char(collect_date, 'YYYY') desc
+	</select>
+	
+	<select id="selectRank" resultMap="resultRank">
+		select * from rank
+		order by rank asc
+	</select>
+
+</mapper>

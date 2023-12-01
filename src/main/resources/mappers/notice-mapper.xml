@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE mapper PUBLIC
+"-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="noticeMapper">
+	
+	
+	<resultMap type="Notice" id="resultNotice">
+		<result column="NOTICE_ID" property="noticeId" />
+		<result column="EMP_ID" property="empId" />
+		<result column="EMP_Name" property="empName" />
+		<result column="NOTICE_TITLE" property="noticeTitle" />
+		<result column="NOTICE_DETAIL" property="noticeDetail" />
+		<result column="CREATE_DATE" property="noticeCreateDate" />
+		<result column="MODIFY_DATE" property="noticeModifyDate" />
+		<result column="DELETE_DATE" property="noticeDeleteDate" />
+		<result column="CLASSIFY" property="classify" />
+		<result column="IMPORTANCE" property="importance" />
+		<result column="NOTICE_READCOUNT" property="noticeReadCount" />
+		<result column="NOTICE_ORIGINAL_FILENAME" property="noticeOriginalFileName" />
+		<result column="NOTICE_RENAME_FILENAME" property="noticeRenameFileName" />
+	</resultMap>
+	
+	<select id="selectNoticeList" parameterType="Paging" resultMap="resultNotice">
+		
+			select * from (select rownum rnum, NOTICE_ID, EMP_ID, EMP_Name, NOTICE_TITLE, 
+				            NOTICE_DETAIL, CREATE_DATE  ,IMPORTANCE, NOTICE_READCOUNT , NOTICE_ORIGINAL_FILENAME, NOTICE_RENAME_FILENAME 
+				      		from (select * from notice 
+				      			join employee using (EMP_ID)
+				            order by importance desc, CREATE_DATE desc, NOTICE_ID desc)
+				     	   ) 
+		where rnum between #{ startRow } and #{ endRow }
+		
+		
+	</select>
+	
+	<select id="selectOne" parameterType="_int" resultMap="resultNotice">
+		select * from notice join employee using (EMP_ID) where NOTICE_ID = #{ noticeId}
+	</select>	
+	
+	<select id="selectListCount" resultType="_int">
+		select count(*) from notice
+	</select>
+	
+	<insert id="insertNotice" parameterType="Notice">
+		insert into notice 
+		values ((select max(NOTICE_ID) + 1 from notice), 
+				#{empId}, #{noticeTitle}, #{noticeDetail}, 
+				sysdate, default, default , #{classify},  
+				#{importance},default,#{noticeOriginalFileName},#{noticeRenameFileName})
+				
+	</insert>
+	
+	<update id="updateNotice" parameterType="Notice">
+		update notice 
+		set NOTICE_TITLE = #{noticeTitle},  
+			NOTICE_DETAIL = #{noticeDetail}
+		where NOTICE_ID = #{noticeId}
+	</update>
+	
+	<update id="updateReadCount" parameterType="_int">
+		update notice
+		set NOTICE_READCOUNT = NOTICE_READCOUNT +1
+		where NOTICE_ID = #{noticeId}
+	</update>
+	
+	<delete id="deleteNotice" parameterType="_int">
+		delete from notice where NOTICE_ID = #{ noticeId }
+	</delete>
+	
+	<select id="selectSearchTitleCount" parameterType="Search" resultType="_int" >
+		SELECT count(*) from notice
+		where NOTICE_TITLE like '%' || #{ keyword } || '%'
+	</select>
+	
+	<select id="selectSearchTitle" parameterType="Search" resultMap="resultNotice">
+		<![CDATA[
+		select * 
+		from (select rownum rnum,  NOTICE_ID, EMP_ID, EMP_NAME,
+		           NOTICE_TITLE, NOTICE_DETAIL, CREATE_DATE, CLASSIFY, IMPORTANCE
+                from (select * 
+		            from notice
+                    Left join employee using(EMP_ID)
+		            where NOTICE_TITLE like '%' || #{ keyword } || '%'
+		            order by NOTICE_ID desc))	
+		where rnum >= #{ startRow } and rnum <= #{ endRow }
+		
+		]]>
+	</select>
+	
+		<select id="selectSearchWriterCount" parameterType="Search" resultType="_int" >
+			SELECT count(*) from notice 
+							join employee using(EMP_ID)
+			where emp_name like '%' || #{ keyword } || '%'
+		</select>
+	
+	<select id="selectSearchWriter" parameterType="Search" resultMap="resultNotice">
+		<![CDATA[
+		select * 
+		from (select rownum rnum,  NOTICE_ID, EMP_ID, EMP_NAME,
+		           NOTICE_TITLE, NOTICE_DETAIL, CREATE_DATE, CLASSIFY, IMPORTANCE
+                from (select * 
+		            from notice
+                    Left join employee using(EMP_ID)
+		            where emp_name like '%' || #{ keyword } || '%'
+		            order by NOTICE_ID desc))	
+		where rnum >= #{ startRow } and rnum <= #{ endRow }
+		
+		]]>
+	</select>
+	
+	<select id="selectNoticeCountByDate" parameterType="Search" resultType="_int">
+		select count(*) from notice
+		where create_date between #{ begin } and (to_date(#{ end }) + 1 - 1/86400)
+	</select>
+	
+	<select id="selectNoticeByDate" parameterType="Search" resultMap="resultNotice">
+		select *
+		from (select rownum rnum, sub.*
+			  from (select * from notice
+					join employee using (emp_id)
+					where create_date between #{ begin } and (to_date(#{ end }) + 1 - 1/86400)
+					order by create_date desc, notice_id desc) sub)
+		where rnum between #{ startRow } and #{ endRow }
+	</select>
+	
+	
+	
+</mapper>
+
+
+
+
+
+

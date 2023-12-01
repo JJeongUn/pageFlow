@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE mapper PUBLIC
+"-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="approvalLineMapper">
+	<resultMap type="ApprovalLine" id="resultApprovalLine">
+		<result property="lineId" column="LINE_ID" />
+		<result property="lineDepth" column="LINE_DEPTH" />
+		<result property="empId" column="EMP_ID" />
+		<result property="approverId" column="APPROVER_ID" />
+		<result property="approverName" column="APPROVER_NAME" />
+		<result property="posName" column="POS_NAME" />
+		<result property="stampCheck" column="STAMP_CHECK" />
+		<result property="stampDate" column="STAMP_DATE" />
+	</resultMap>
+	
+	<resultMap type="ApprovalLineSave" id="resultApprovalSaveLine">
+		<result property="savelineId" column="SAVELINE_ID" />
+		<result property="lineDepth" column="LINE_DEPTH" />
+		<result property="empId" column="EMP_ID" />
+		<result property="approverId" column="APPROVER_ID" />
+		<result property="approverName" column="APPROVER_NAME" />
+		<result property="posName" column="POS_NAME" />
+		<result property="lineName" column="LINE_NAME" />
+	</resultMap>
+	
+	<select id="selectApprovalLineList" parameterType="_int" resultMap="resultApprovalLine">
+		select * from approvalline
+		where line_id = #{ lineId }
+		order by LINE_DEPTH asc
+	</select>
+	
+	<select id="selectMyApprovalSaveLineList" parameterType="_int" resultMap="resultApprovalSaveLine">
+		select * from approvalline_save
+		where SAVELINE_ID = #{ lineId }
+		order by LINE_DEPTH asc
+	</select>
+	
+	<select id="selectMyApprovalSaveLineListEmpId" parameterType="_int" resultMap="resultApprovalSaveLine">
+		select * from approvalline_save
+		where EMP_ID = #{ empId }
+		order by SAVELINE_ID desc, LINE_DEPTH asc
+	</select>
+	
+	<select id="selectApprovalSaveLineId" resultType="_int">
+		select max(SAVELINE_ID) from approvalline_save
+	</select>
+	
+	<insert id="insertApprovalLineSave" parameterType="ApprovalLineSave">
+		insert into approvalline_save
+		values(#{ savelineId }, #{ lineDepth }, #{ empId }, #{ approverId }, 
+		#{ approverName }, #{ posName }, #{ lineName })
+	</insert>
+	
+	<update id="updateApprLineStampCheck" parameterType="ApprovalLineKeyword">
+		update approvalLine
+		set STAMP_CHECK = #{ stampCheck },
+			STAMP_DATE = sysdate
+		where LINE_ID = #{ lineId }
+		and   APPROVER_ID = #{ approverId }
+	</update>
+	
+	
+	
+</mapper>
